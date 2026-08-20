@@ -6,13 +6,29 @@ struct MenuContentView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack { Text("AI Usage").font(.headline); Spacer(); Button("Refresh") { store.refresh() }.disabled(store.claude.isRefreshing || store.codex.isRefreshing) }
-            provider("Claude", status: store.claude)
-            Divider()
-            provider("Codex", status: store.codex)
-            HStack { Spacer(); Button("Quit") { NSApplication.shared.terminate(nil) } }
+            if store.claudeEnabled { provider("Claude Code", status: store.claude) }
+            if store.claudeEnabled && store.codexEnabled { Divider() }
+            if store.codexEnabled { provider("Codex", status: store.codex) }
+            if !store.claudeEnabled && !store.codexEnabled { Text("Enable a provider in Settings.").font(.caption).foregroundStyle(.secondary) }
+            HStack {
+                settingsButton
+                Spacer()
+                Button("Quit") { NSApplication.shared.terminate(nil) }
+            }
         }
         .padding()
         .frame(width: 320)
+    }
+
+    @ViewBuilder private var settingsButton: some View {
+        if #available(macOS 14.0, *) {
+            SettingsActionButton()
+        } else {
+            Button("Settings…") {
+                NSApplication.shared.activate(ignoringOtherApps: true)
+                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+            }
+        }
     }
 
     @ViewBuilder private func provider(_ name: String, status: ProviderStatus) -> some View {
@@ -41,3 +57,15 @@ struct MenuContentView: View {
         return "resets \(RelativeDateTimeFormatter().localizedString(for: date, relativeTo: Date()))"
     }
 }
+@available(macOS 14.0, *)
+private struct SettingsActionButton: View {
+    @Environment(\.openSettings) private var openSettings
+
+    var body: some View {
+        Button("Settings…") {
+            NSApplication.shared.activate(ignoringOtherApps: true)
+            openSettings()
+        }
+    }
+}
+

@@ -4,9 +4,19 @@ import SwiftUI
     @StateObject private var store = UsageStore()
 
     var body: some Scene {
-        MenuBarExtra("AI Usage", systemImage: "chart.bar") {
+        MenuBarExtra("Token Usage", systemImage: "chart.bar") {
             MenuContentView(store: store)
         }
         .menuBarExtraStyle(.window)
+
+        Settings {
+            Form {
+                Toggle("Show Claude", isOn: Binding(get: { store.claudeEnabled }, set: store.setClaudeEnabled))
+                Toggle("Show Codex", isOn: Binding(get: { store.codexEnabled }, set: store.setCodexEnabled))
+            }
+            .toggleStyle(.switch)
+            .padding()
+            .frame(width: 260)
+        }
     }
 }
