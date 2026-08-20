@@ -2,6 +2,8 @@
 
 A personal macOS menu-bar app showing end-user subscription usage from existing Claude Code and Codex CLI logins. It requires macOS 13+, Xcode, Claude Code (optional), and Codex CLI logged in with `codex login`. No API keys are used.
 
+![Token Usage menu](docs/token-usage-menu.png)
+
 ## Use the app
 
 1. Log into Codex once: `codex login`.

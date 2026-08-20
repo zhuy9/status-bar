@@ -5,7 +5,7 @@ struct MenuContentView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack { Text("AI Usage").font(.headline); Spacer(); Button("Refresh") { store.refresh() }.disabled(store.claude.isRefreshing || store.codex.isRefreshing) }
+            HStack { Text("Token Usage").font(.headline); Spacer(); Button("Refresh") { store.refresh() }.disabled(store.claude.isRefreshing || store.codex.isRefreshing) }
             if store.claudeEnabled { provider("Claude Code", status: store.claude) }
             if store.claudeEnabled && store.codexEnabled { Divider() }
             if store.codexEnabled { provider("Codex", status: store.codex) }
