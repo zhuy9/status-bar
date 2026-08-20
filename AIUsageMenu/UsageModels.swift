@@ -1,6 +1,6 @@
 import Foundation
 
-enum Provider: String, Codable, CaseIterable { case claude, codex }
+enum Provider: String, Codable { case claude, codex }
 
 struct UsageWindow: Identifiable, Codable, Equatable {
     let id: String

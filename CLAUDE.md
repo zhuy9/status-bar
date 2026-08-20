@@ -1,6 +1,6 @@
 # Implementation notes
 
-Follow `/Users/darren/Downloads/AI_Usage_Menu_MVP_Design.md`. Do not expand scope: use SwiftUI and Foundation only; no API client, credential access, browser scraping, database, daemon, file watcher, settings, charts, notifications, or third-party packages.
+Follow the MVP design in [README.md](README.md). Do not expand scope: use SwiftUI and Foundation only; no API client, credential access, browser scraping, database, daemon, file watcher, settings, charts, notifications, or third-party packages.
 
 After each implementation step, compile and run the focused tests:
 

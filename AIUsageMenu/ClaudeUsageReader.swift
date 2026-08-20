@@ -18,8 +18,7 @@ struct ClaudeUsageReader {
 
     func read() throws -> ProviderUsage {
         guard FileManager.default.fileExists(atPath: url.path) else { throw ClaudeUsageError.setupRequired }
-        let data: Data
-        do { data = try Data(contentsOf: url) } catch { throw ClaudeUsageError.unreadable }
+        guard let data = try? Data(contentsOf: url) else { throw ClaudeUsageError.unreadable }
         guard let payload = try? JSONDecoder().decode(Payload.self, from: data) else { throw ClaudeUsageError.unreadable }
         guard let limits = payload.rateLimits else { throw ClaudeUsageError.noUsage }
         let windows = [window(limits.fiveHour, id: "claude-five-hour", label: "5h"), window(limits.sevenDay, id: "claude-seven-day", label: "7d")].compactMap { $0 }

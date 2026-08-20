@@ -15,7 +15,6 @@ enum AppFiles {
     @Published var codex = ProviderStatus()
     private let claudeReader = ClaudeUsageReader()
     private let codexClient = CodexAppServerClient()
-    private var refreshTask: Task<Void, Never>?
 
     init() {
         AppFiles.prepareDirectory()
@@ -29,7 +28,7 @@ enum AppFiles {
     func refresh() {
         guard !claude.isRefreshing && !codex.isRefreshing else { return }
         claude.isRefreshing = true; codex.isRefreshing = true
-        refreshTask = Task { [weak self] in
+        Task { [weak self] in
             guard let self else { return }
             do { self.claude.usage = try self.claudeReader.read(); self.claude.errorMessage = nil }
             catch { self.claude.errorMessage = error.localizedDescription }
