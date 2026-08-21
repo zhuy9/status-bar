@@ -1,4 +1,4 @@
-# AI Usage Menu
+# MacOS Token Usage Menu
 
 A personal macOS menu-bar app showing end-user subscription usage from existing Claude Code and Codex CLI logins. It requires macOS 13+, Xcode, Claude Code (optional), and Codex CLI logged in with `codex login`. No API keys are used.
 
@@ -11,7 +11,7 @@ A personal macOS menu-bar app showing end-user subscription usage from existing 
 3. Open `AIUsageMenu.xcodeproj` in Xcode and click Run.
 4. Click the chart icon in the menu bar. The app refreshes immediately, every five minutes, and whenever you choose **Refresh**.
 
-Each row shows percentage used and its reset time. If a provider is unavailable, its section shows a short error while retaining the last successful reading.
+Each row shows the percentage used and its reset time. If a provider is unavailable, its section shows a short error while retaining the last successful reading.
 
 Use **Settings…** in the menu-bar panel to hide Claude or Codex. Disabled providers are not read or queried; turn one back on to refresh it.
 
