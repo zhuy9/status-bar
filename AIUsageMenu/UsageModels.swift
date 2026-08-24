@@ -23,6 +23,25 @@ struct ProviderStatus {
     var isRefreshing = false
 }
 
+// A GUI app inherits a bare PATH, and `zsh -lc` skips .zshrc where PATH edits usually live —
+// hence the explicit install locations before falling back to an interactive login shell.
+// Known locations are checked before PATH so the common case stats three paths instead of
+// every PATH entry: a stat under a stale or automounted PATH entry is what makes macOS ask
+// for network-volume access.
+func findExecutable(_ name: String) -> URL? {
+    let paths = [
+        FileManager.default.homeDirectoryForCurrentUser.appending(path: ".local/bin/\(name)").path,
+        "/opt/homebrew/bin/\(name)",
+        "/usr/local/bin/\(name)"
+    ] + (ProcessInfo.processInfo.environment["PATH"] ?? "").split(separator: ":").map { String($0) + "/" + name }
+    if let path = paths.first(where: { FileManager.default.isExecutableFile(atPath: $0) }) { return URL(fileURLWithPath: path) }
+    let task = Process(); task.executableURL = URL(fileURLWithPath: "/bin/zsh"); task.arguments = ["-ilc", "command -v \(name)"]
+    let output = Pipe(); task.standardOutput = output; task.standardError = Pipe()
+    guard (try? task.run()) != nil else { return nil }; task.waitUntilExit()
+    let path = String(data: output.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    return FileManager.default.isExecutableFile(atPath: path) ? URL(fileURLWithPath: path) : nil
+}
+
 func durationLabel(_ minutes: Int?) -> String {
     guard let minutes, minutes > 0 else { return "Usage" }
     if minutes % 1_440 == 0 { return "\(minutes / 1_440)d" }

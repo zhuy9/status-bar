@@ -14,7 +14,7 @@ enum CodexUsageError: LocalizedError {
 
 struct CodexAppServerClient {
     private let executable: URL?
-    init(executable: URL? = nil) { self.executable = executable ?? Self.findExecutable() }
+    init(executable: URL? = nil) { self.executable = executable ?? findExecutable("codex") }
 
     func fetch() async throws -> ProviderUsage {
         try await Task.detached { try fetchSynchronously(executable: executable) }.value
@@ -44,26 +44,13 @@ struct CodexAppServerClient {
     private static func windowDuration(_ value: Any?) -> Int {
         ((value as? [String: Any])?["windowDurationMins"] as? NSNumber)?.intValue ?? .max
     }
-
-    private static func findExecutable() -> URL? {
-        let paths = (ProcessInfo.processInfo.environment["PATH"] ?? "").split(separator: ":").map { String($0) + "/codex" } + [
-            FileManager.default.homeDirectoryForCurrentUser.appending(path: ".local/bin/codex").path,
-            "/opt/homebrew/bin/codex",
-            "/usr/local/bin/codex"
-        ]
-        if let path = paths.first(where: { FileManager.default.isExecutableFile(atPath: $0) }) { return URL(fileURLWithPath: path) }
-        let task = Process(); task.executableURL = URL(fileURLWithPath: "/bin/zsh"); task.arguments = ["-lc", "command -v codex"]
-        let output = Pipe(); task.standardOutput = output
-        guard (try? task.run()) != nil else { return nil }; task.waitUntilExit()
-        let path = String(data: output.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return FileManager.default.isExecutableFile(atPath: path) ? URL(fileURLWithPath: path) : nil
-    }
 }
 
 private func fetchSynchronously(executable: URL?) throws -> ProviderUsage {
     guard let executable else { throw CodexUsageError.notFound }
     let process = Process(), input = Pipe(), output = Pipe()
     process.executableURL = executable; process.arguments = ["app-server", "--stdio"]; process.standardInput = input; process.standardOutput = output; process.standardError = Pipe()
+    process.currentDirectoryURL = AppFiles.directory // not "/", which a Finder launch would inherit
     try process.run()
     let requests = ["{\"method\":\"initialize\",\"id\":1,\"params\":{\"clientInfo\":{\"name\":\"ai_usage_menu\",\"title\":\"AI Usage Menu\",\"version\":\"0.1.0\"}}}", "{\"method\":\"initialized\",\"params\":{}}", "{\"method\":\"account/rateLimits/read\",\"id\":2}"]
     input.fileHandleForWriting.write(Data((requests.joined(separator: "\n") + "\n").utf8))

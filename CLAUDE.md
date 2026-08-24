@@ -1,6 +1,6 @@
 # Implementation notes
 
-Follow the MVP design in [README.md](README.md). Do not expand scope: use SwiftUI and Foundation only; no API client, credential access, browser scraping, database, daemon, file watcher, settings, charts, notifications, or third-party packages.
+Follow the MVP design in [README.md](README.md). Do not expand scope: SwiftUI and Foundation only, plus `Process` calls to the provider CLIs. No API client, credential access, browser scraping, database, daemon, file watcher, charts, notifications, or third-party packages.
 
 After each implementation step, compile and run the focused tests:
 

@@ -2,7 +2,7 @@ import SwiftUI
 
 enum AppFiles {
     static let directory = FileManager.default.homeDirectoryForCurrentUser.appending(path: "Library/Application Support/AIUsage")
-    static let claudeURL = directory.appending(path: "claude-status.json")
+    static let claudeURL = directory.appending(path: "claude-cache.json")
     static let codexURL = directory.appending(path: "codex-cache.json")
 
     static func prepareDirectory() {
@@ -37,12 +37,12 @@ enum AppFiles {
         Task { [weak self] in
             guard let self else { return }
             if self.claudeEnabled {
-                do { self.claude.usage = try self.claudeReader.read(); self.claude.errorMessage = nil }
+                do { let usage = try await self.claudeReader.read(); self.claude.usage = usage; self.claude.errorMessage = nil; self.save(usage, to: AppFiles.claudeURL) }
                 catch { self.claude.errorMessage = error.localizedDescription }
                 self.claude.isRefreshing = false
             }
             if self.codexEnabled {
-                do { let usage = try await self.codexClient.fetch(); self.codex.usage = usage; self.codex.errorMessage = nil; self.saveCodex(usage) }
+                do { let usage = try await self.codexClient.fetch(); self.codex.usage = usage; self.codex.errorMessage = nil; self.save(usage, to: AppFiles.codexURL) }
                 catch { self.codex.errorMessage = error.localizedDescription }
                 self.codex.isRefreshing = false
             }
@@ -53,14 +53,19 @@ enum AppFiles {
     func setCodexEnabled(_ enabled: Bool) { setEnabled(enabled, key: "codexEnabled", provider: .codex) }
 
     private func loadCachedValues() {
-        if claudeEnabled, let usage = try? claudeReader.read() { claude.usage = usage }
-        if codexEnabled, let data = try? Data(contentsOf: AppFiles.codexURL), let usage = try? JSONDecoder().decode(ProviderUsage.self, from: data) { codex.usage = usage }
+        if claudeEnabled { claude.usage = Self.loadCache(AppFiles.claudeURL) }
+        if codexEnabled { codex.usage = Self.loadCache(AppFiles.codexURL) }
     }
 
-    private func saveCodex(_ usage: ProviderUsage) {
+    private static func loadCache(_ url: URL) -> ProviderUsage? {
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        return try? JSONDecoder().decode(ProviderUsage.self, from: data)
+    }
+
+    private func save(_ usage: ProviderUsage, to url: URL) {
         guard let data = try? JSONEncoder().encode(usage) else { return }
-        try? data.write(to: AppFiles.codexURL, options: .atomic)
-        try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: AppFiles.codexURL.path)
+        try? data.write(to: url, options: .atomic)
+        try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
     }
 
     private func setEnabled(_ enabled: Bool, key: String, provider: Provider) {
