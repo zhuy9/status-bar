@@ -32,6 +32,9 @@ private enum MenuBarIcon {
             Form {
                 Toggle("Show Claude", isOn: Binding(get: { store.claudeEnabled }, set: store.setClaudeEnabled))
                 Toggle("Show Codex", isOn: Binding(get: { store.codexEnabled }, set: store.setCodexEnabled))
+                TextField("Greeting", text: $store.greeting, prompt: Text(UsageStore.defaultGreeting))
+                Text("Sent by the Hello buttons to start a rate-limit window. Leave blank for “\(UsageStore.defaultGreeting)”.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
             .toggleStyle(.switch)
             .padding()

@@ -28,7 +28,9 @@ codex login
 
 Then open `AIUsageMenu.xcodeproj` in Xcode and press **Run**. Click the chart icon in the menu bar.
 
-The app refreshes on launch, every five minutes, and whenever you choose **Refresh**. Each row shows percent used and its reset time. If a provider is unavailable, its section shows a short message and keeps the last successful reading.
+The app refreshes on launch, once an hour, and whenever you choose **Refresh**. Each row shows percent used and its reset time. If a provider is unavailable, its section shows a short message and keeps the last successful reading.
+
+It also refreshes on `NSWorkspace.didWakeNotification`, because the hourly timer is a sleep loop rather than a wall clock and does not run through system sleep — without that, waking the Mac would leave hour-old numbers on screen until the next tick. The "Updated N ago" line under each provider is the tell if a reading is stale.
 
 ## Claude setup
 
@@ -40,8 +42,8 @@ adds nothing to the usage it reports.
 
 Two details worth knowing:
 
-- The spawn passes `--settings '{"disableAllHooks":true}'`, so polling every five minutes does not
-  fire your `SessionStart` hooks 288 times a day.
+- The spawn passes `--settings '{"disableAllHooks":true}'`, so hourly polling does not fire your
+  `SessionStart` hooks on a timer.
 - `USER` and `HOME` are set explicitly on the child. Without `USER` the CLI still exits 0 but
   prints session cost with no plan percentages at all — a silent empty reading.
 

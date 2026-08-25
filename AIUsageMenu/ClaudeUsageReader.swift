@@ -18,7 +18,12 @@ struct ClaudeUsageReader {
     // `/usage` is a local slash command: no model call, no tokens. It is the only source of plan
     // percentages outside the terminal status line, which the VS Code extension never renders.
     func read() async throws -> ProviderUsage {
-        try await Task.detached { try Self.parse(Self.run(executable)) }.value
+        try await Task.detached { try Self.parse(Self.run(executable, prompt: "/usage")) }.value
+    }
+
+    // Costs a real turn — that is the point, it is what starts the rate-limit window.
+    func sayHello(_ prompt: String) async throws {
+        _ = try await Task.detached { try Self.run(executable, prompt: prompt, timeout: 90) }.value
     }
 
     static func parse(_ text: String) throws -> ProviderUsage {
@@ -54,25 +59,11 @@ struct ClaudeUsageReader {
         return nil
     }
 
-    private static func run(_ executable: URL?) throws -> String {
+    // disableAllHooks: this polls hourly; firing the user's SessionStart hooks on a timer is rude.
+    private static func run(_ executable: URL?, prompt: String, timeout: TimeInterval = 20) throws -> String {
         guard let executable else { throw ClaudeUsageError.notFound }
-        let process = Process(), output = Pipe()
-        process.executableURL = executable
-        // disableAllHooks: this polls every few minutes; firing SessionStart that often is rude.
-        process.arguments = ["-p", "/usage", "--output-format", "json", "--settings", #"{"disableAllHooks":true}"#]
-        // USER: without it /usage still exits 0 but prints cost with no plan percentages at all.
-        var environment = ProcessInfo.processInfo.environment
-        environment["USER"] = NSUserName()
-        environment["HOME"] = FileManager.default.homeDirectoryForCurrentUser.path
-        process.environment = environment
-        process.currentDirectoryURL = AppFiles.directory // not "/", where the CLI hunts for git roots
-        process.standardOutput = output
-        process.standardError = Pipe()
-        try process.run()
-        DispatchQueue.global().asyncAfter(deadline: .now() + 20) { if process.isRunning { process.terminate() } }
-        let data = output.fileHandleForReading.readDataToEndOfFile()
-        process.waitUntilExit()
-        guard process.terminationStatus == 0 else { throw ClaudeUsageError.failed }
+        let arguments = ["-p", prompt, "--output-format", "json", "--settings", #"{"disableAllHooks":true}"#]
+        guard let data = runCLI(executable, arguments, timeout: timeout) else { throw ClaudeUsageError.failed }
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let result = json["result"] as? String else { throw ClaudeUsageError.unreadable }
         return result

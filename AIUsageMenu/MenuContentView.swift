@@ -5,10 +5,10 @@ struct MenuContentView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack { Text("Token Usage").font(.headline); Spacer(); Button("Refresh") { store.refresh() }.disabled(store.claude.isRefreshing || store.codex.isRefreshing) }
-            if store.claudeEnabled { provider("Claude Code", status: store.claude) }
+            HStack { Text("Token Usage").font(.headline); Spacer(); Button("Refresh") { store.refresh() }.disabled(store.isBusy) }
+            if store.claudeEnabled { provider("Claude Code", .claude, status: store.claude) }
             if store.claudeEnabled && store.codexEnabled { Divider() }
-            if store.codexEnabled { provider("Codex", status: store.codex) }
+            if store.codexEnabled { provider("Codex", .codex, status: store.codex) }
             if !store.claudeEnabled && !store.codexEnabled { Text("Enable a provider in Settings.").font(.caption).foregroundStyle(.secondary) }
             HStack {
                 settingsButton
@@ -31,9 +31,16 @@ struct MenuContentView: View {
         }
     }
 
-    @ViewBuilder private func provider(_ name: String, status: ProviderStatus) -> some View {
+    @ViewBuilder private func provider(_ name: String, _ provider: Provider, status: ProviderStatus) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(name).font(.headline)
+            HStack {
+                Text(name).font(.headline)
+                Spacer()
+                Button { store.sayHello(provider) } label: { Text(store.greetingText).lineLimit(1) }
+                    .controlSize(.small)
+                    .disabled(store.isBusy)
+                    .help("Send this prompt to start \(name)'s rate-limit window. Spends real usage.")
+            }
             if let usage = status.usage {
                 ForEach(usage.windows) { window in
                     VStack(alignment: .leading, spacing: 2) {

@@ -49,6 +49,29 @@ func findExecutable(_ name: String) -> URL? {
     return FileManager.default.isExecutableFile(atPath: path) ? URL(fileURLWithPath: path) : nil
 }
 
+// Both CLIs need the same hardening, so spawn them the same way. Returns nil on a spawn failure
+// or non-zero exit; callers translate that into their own error.
+// USER is pinned because the Claude CLI resolves the subscription profile from it — without it
+// /usage exits 0 and reports no plan percentages at all. The working directory is pinned because
+// a Finder-launched app starts at "/", where both CLIs walk up hunting for git roots.
+func runCLI(_ executable: URL, _ arguments: [String], timeout: TimeInterval = 20) -> Data? {
+    let process = Process(), output = Pipe()
+    process.executableURL = executable
+    process.arguments = arguments
+    var environment = ProcessInfo.processInfo.environment
+    environment["USER"] = NSUserName()
+    environment["HOME"] = FileManager.default.homeDirectoryForCurrentUser.path
+    process.environment = environment
+    process.currentDirectoryURL = AppFiles.directory
+    process.standardOutput = output
+    process.standardError = Pipe()
+    guard (try? process.run()) != nil else { return nil }
+    DispatchQueue.global().asyncAfter(deadline: .now() + timeout) { if process.isRunning { process.terminate() } }
+    let data = output.fileHandleForReading.readDataToEndOfFile()
+    process.waitUntilExit()
+    return process.terminationStatus == 0 ? data : nil
+}
+
 func durationLabel(_ minutes: Int?) -> String {
     guard let minutes, minutes > 0 else { return "Usage" }
     if minutes % 1_440 == 0 { return "\(minutes / 1_440)d" }
