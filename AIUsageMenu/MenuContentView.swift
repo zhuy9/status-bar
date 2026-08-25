@@ -39,7 +39,9 @@ struct MenuContentView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: 8) {
                             Text(window.label).frame(width: 30, alignment: .leading)
-                            ProgressView(value: window.clampedPercent, total: 100).frame(width: 92)
+                            ProgressView(value: window.clampedPercent, total: 100)
+                                .frame(width: 92)
+                                .tint(usageColor(window.clampedPercent))
                             Text("\(Int(window.clampedPercent.rounded()))% used")
                         }
                         Text(resetText(window.resetsAt)).foregroundStyle(.secondary).padding(.leading, 38)

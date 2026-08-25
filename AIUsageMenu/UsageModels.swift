@@ -1,6 +1,13 @@
-import Foundation
+import SwiftUI
 
 enum Provider: String, Codable { case claude, codex }
+
+// 70 is Claude Code's own threshold: below it, it suppresses the "close to your limit" warning
+// outright. ponytail: 90 for red is ours — Claude Code only goes red on an actual 429, which is
+// too late to be useful in a menu bar.
+func usageColor(_ percent: Double) -> Color {
+    percent >= 90 ? .red : percent >= 70 ? .yellow : .blue
+}
 
 struct UsageWindow: Identifiable, Codable, Equatable {
     let id: String

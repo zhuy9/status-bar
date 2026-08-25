@@ -11,6 +11,10 @@ final class CodexResponseParserTests: XCTestCase {
         XCTAssertEqual(try CodexAppServerClient.parseResponse(line)?.windows.count, 1)
     }
     func testIgnoresNotification() throws { XCTAssertNil(try CodexAppServerClient.parseResponse("{\"method\":\"notice\"}")) }
+    func testUsageColorThresholds() {
+        XCTAssertEqual([0, 69.9, 70, 89.9, 90, 100].map(usageColor), [.blue, .blue, .yellow, .yellow, .red, .red])
+    }
+
     func testDurationLabels() { XCTAssertEqual(durationLabel(30), "30m"); XCTAssertEqual(durationLabel(300), "5h"); XCTAssertEqual(durationLabel(10080), "7d") }
     func testCacheRoundTrip() throws {
         let value = ProviderUsage(provider: .codex, updatedAt: .now, windows: [])
