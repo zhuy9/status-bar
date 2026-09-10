@@ -20,4 +20,7 @@ final class CodexResponseParserTests: XCTestCase {
         let value = ProviderUsage(provider: .codex, updatedAt: .now, windows: [])
         XCTAssertEqual(try JSONDecoder().decode(ProviderUsage.self, from: JSONEncoder().encode(value)), value)
     }
+    func testRefreshIntervalLabels() {
+        XCTAssertEqual(RefreshInterval.allCases.map(\.menuLabel), ["15 Minutes", "1 Hour", "5 Hours", "1 Day"])
+    }
 }

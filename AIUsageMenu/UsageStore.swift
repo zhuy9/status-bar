@@ -16,22 +16,25 @@ enum AppFiles {
     @Published private(set) var claudeEnabled: Bool
     @Published private(set) var codexEnabled: Bool
     @Published var greeting: String { didSet { UserDefaults.standard.set(greeting, forKey: "greeting") } }
+    // Restart on change, or a switch from 1d to 15m waits out the day-long sleep already in flight.
+    @Published var refreshInterval: RefreshInterval {
+        didSet { UserDefaults.standard.set(refreshInterval.rawValue, forKey: "refreshInterval"); startTicker() }
+    }
     private let claudeReader = ClaudeUsageReader()
     private lazy var codexClient = CodexAppServerClient()
+    private var ticker: Task<Void, Never>?
 
     init() {
         claudeEnabled = UserDefaults.standard.object(forKey: "claudeEnabled") as? Bool ?? true
         codexEnabled = UserDefaults.standard.object(forKey: "codexEnabled") as? Bool ?? true
         greeting = UserDefaults.standard.string(forKey: "greeting") ?? UsageStore.defaultGreeting
+        refreshInterval = (UserDefaults.standard.object(forKey: "refreshInterval") as? Int).flatMap(RefreshInterval.init) ?? .day
         AppFiles.prepareDirectory()
         loadCachedValues()
         refresh()
-        Task { [weak self] in
-            while !Task.isCancelled { try? await Task.sleep(for: .seconds(3600)); self?.refresh() }
-        }
-        // Task.sleep does not run through system sleep, so the hourly tick would otherwise leave
-        // hour-old numbers on screen after the lid opens. Note: NSWorkspace posts to its own
-        // notification centre, not NotificationCenter.default.
+        startTicker()
+        // Task.sleep does not run through system sleep, so the tick alone leaves stale numbers
+        // after a lid open. NSWorkspace posts to its own centre, not NotificationCenter.default.
         _ = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didWakeNotification, object: nil, queue: .main
         ) { [weak self] _ in
@@ -39,19 +42,33 @@ enum AppFiles {
         }
     }
 
+    // try? swallows the cancellation throw, so check again or a cancelled ticker refreshes once more.
+    private func startTicker() {
+        ticker?.cancel()
+        let seconds = refreshInterval.rawValue
+        ticker = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(seconds))
+                if Task.isCancelled { return }
+                await self?.refresh()
+            }
+        }
+    }
+
     var isBusy: Bool { claude.isRefreshing || codex.isRefreshing }
+
+    func isEnabled(_ provider: Provider) -> Bool { provider == .claude ? claudeEnabled : codexEnabled }
+    func status(for provider: Provider) -> ProviderStatus { provider == .claude ? claude : codex }
 
     static let defaultGreeting = "hi"
 
-    // Empty or whitespace-only would send a blank prompt, so fall back at use rather than
-    // coercing the field while it is being typed in. Also the button label, so the two cannot drift.
+    // Falls back at use, not by coercing the field mid-typing. Also the menu title, so they match.
     var greetingText: String {
         let trimmed = greeting.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? Self.defaultGreeting : trimmed
     }
 
-    // One throwaway turn, which is what starts a rate-limit window. It spends real usage, and a
-    // single "hi" is well under 1% of a window, so the bar may not visibly move.
+    // One throwaway turn, which is what starts a window. Well under 1%, so the bar may not move.
     func sayHello(_ provider: Provider) {
         guard !isBusy else { return }
         let isClaude = provider == .claude

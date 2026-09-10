@@ -15,13 +15,12 @@ enum ClaudeUsageError: LocalizedError {
 struct ClaudeUsageReader {
     private let executable = findExecutable("claude")
 
-    // `/usage` is a local slash command: no model call, no tokens. It is the only source of plan
-    // percentages outside the terminal status line, which the VS Code extension never renders.
+    // `/usage` is local: no model call, no tokens, and the only source of plan percentages.
     func read() async throws -> ProviderUsage {
         try await Task.detached { try Self.parse(Self.run(executable, prompt: "/usage")) }.value
     }
 
-    // Costs a real turn — that is the point, it is what starts the rate-limit window.
+    // Costs a real turn — that is the point: it starts the rate-limit window.
     func sayHello(_ prompt: String) async throws {
         _ = try await Task.detached { try Self.run(executable, prompt: prompt, timeout: 90) }.value
     }
@@ -44,8 +43,7 @@ struct ClaudeUsageReader {
     }
 
     // Two formats because the CLI drops ":00" on the hour.
-    // ponytail: no year in the stamp, so it comes from defaultDate — a late-December reading of a
-    // January reset lands a year early.
+    // ponytail: no year in the stamp, so a December reading of a January reset lands a year early.
     static func resetDate(_ text: String) -> Date? {
         guard let range = text.range(of: "resets ") else { return nil }
         let stamp = text[range.upperBound...].split(separator: "(").first?.trimmingCharacters(in: .whitespaces) ?? ""
@@ -59,7 +57,7 @@ struct ClaudeUsageReader {
         return nil
     }
 
-    // disableAllHooks: this polls hourly; firing the user's SessionStart hooks on a timer is rude.
+    // disableAllHooks: firing the user's SessionStart hooks on every poll is rude.
     private static func run(_ executable: URL?, prompt: String, timeout: TimeInterval = 20) throws -> String {
         guard let executable else { throw ClaudeUsageError.notFound }
         let arguments = ["-p", prompt, "--output-format", "json", "--settings", #"{"disableAllHooks":true}"#]

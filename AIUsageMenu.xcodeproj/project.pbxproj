@@ -13,6 +13,7 @@
 		A10000000000000000000014 /* UsageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000104 /* UsageModels.swift */; };
 		A10000000000000000000015 /* ClaudeUsageReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000105 /* ClaudeUsageReader.swift */; };
 		A10000000000000000000016 /* CodexAppServerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000106 /* CodexAppServerClient.swift */; };
+		A10000000000000000000017 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000108 /* Assets.xcassets */; };
 		A10000000000000000000021 /* ClaudeUsageReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000201 /* ClaudeUsageReaderTests.swift */; };
 		A10000000000000000000022 /* CodexResponseParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000202 /* CodexResponseParserTests.swift */; };
 /* End PBXBuildFile section */
@@ -35,11 +36,23 @@
 		A10000000000000000000105 /* ClaudeUsageReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeUsageReader.swift; sourceTree = "<group>"; };
 		A10000000000000000000106 /* CodexAppServerClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexAppServerClient.swift; sourceTree = "<group>"; };
 		A10000000000000000000107 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A10000000000000000000108 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A10000000000000000000201 /* ClaudeUsageReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeUsageReaderTests.swift; sourceTree = "<group>"; };
 		A10000000000000000000202 /* CodexResponseParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexResponseParserTests.swift; sourceTree = "<group>"; };
-		A10000000000000000000301 /* AIUsageMenu.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = AIUsageMenu.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000000000000000000301 /* AIUsageMenu.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = "Token Usage.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000000000000000000302 /* AIUsageMenuTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = AIUsageMenuTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A10000000000000000000403 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000017 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A10000000000000000000401 /* Frameworks */ = {
@@ -78,6 +91,7 @@
 				A10000000000000000000105 /* ClaudeUsageReader.swift */,
 				A10000000000000000000106 /* CodexAppServerClient.swift */,
 				A10000000000000000000107 /* Info.plist */,
+				A10000000000000000000108 /* Assets.xcassets */,
 			);
 			path = AIUsageMenu;
 			sourceTree = "<group>";
@@ -109,6 +123,7 @@
 			buildPhases = (
 				A10000000000000000000401 /* Frameworks */,
 				A10000000000000000000701 /* Sources */,
+				A10000000000000000000403 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -211,12 +226,14 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_TESTABILITY = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = AIUsageMenu/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Token Usage";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.zhuy9.AIUsageMenu;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = AIUsageMenu;
+				PRODUCT_NAME = "Token Usage";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -228,12 +245,14 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEAD_CODE_STRIPPING = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = AIUsageMenu/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Token Usage";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.zhuy9.AIUsageMenu;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = AIUsageMenu;
+				PRODUCT_NAME = "Token Usage";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -249,7 +268,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.zhuy9.AIUsageMenuTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AIUsageMenu.app/Contents/MacOS/AIUsageMenu";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Token Usage.app/Contents/MacOS/Token Usage";
 			};
 			name = Debug;
 		};
@@ -264,7 +283,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.zhuy9.AIUsageMenuTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AIUsageMenu.app/Contents/MacOS/AIUsageMenu";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Token Usage.app/Contents/MacOS/Token Usage";
 			};
 			name = Release;
 		};

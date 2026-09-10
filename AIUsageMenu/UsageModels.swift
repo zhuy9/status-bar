@@ -1,10 +1,12 @@
 import SwiftUI
 
-enum Provider: String, Codable { case claude, codex }
+enum Provider: String, Codable, CaseIterable {
+    case claude, codex
+    var title: String { self == .claude ? "Claude Code" : "Codex" }
+}
 
-// 70 is Claude Code's own threshold: below it, it suppresses the "close to your limit" warning
-// outright. ponytail: 90 for red is ours — Claude Code only goes red on an actual 429, which is
-// too late to be useful in a menu bar.
+// 70 is Claude Code's own warning threshold.
+// ponytail: 90 for red is ours — the CLI only goes red on a 429, too late to be useful here.
 func usageColor(_ percent: Double) -> Color {
     percent >= 90 ? .red : percent >= 70 ? .yellow : .blue
 }
@@ -30,11 +32,9 @@ struct ProviderStatus {
     var isRefreshing = false
 }
 
-// A GUI app inherits a bare PATH, and `zsh -lc` skips .zshrc where PATH edits usually live —
-// hence the explicit install locations before falling back to an interactive login shell.
-// Known locations are checked before PATH so the common case stats three paths instead of
-// every PATH entry: a stat under a stale or automounted PATH entry is what makes macOS ask
-// for network-volume access.
+// A GUI app inherits a bare PATH, and `zsh -lc` skips .zshrc — hence the explicit locations, then
+// an interactive login shell. Known paths go first: stat'ing a stale automounted PATH entry is
+// what makes macOS ask for network-volume access.
 func findExecutable(_ name: String) -> URL? {
     let paths = [
         FileManager.default.homeDirectoryForCurrentUser.appending(path: ".local/bin/\(name)").path,
@@ -49,11 +49,9 @@ func findExecutable(_ name: String) -> URL? {
     return FileManager.default.isExecutableFile(atPath: path) ? URL(fileURLWithPath: path) : nil
 }
 
-// Both CLIs need the same hardening, so spawn them the same way. Returns nil on a spawn failure
-// or non-zero exit; callers translate that into their own error.
-// USER is pinned because the Claude CLI resolves the subscription profile from it — without it
-// /usage exits 0 and reports no plan percentages at all. The working directory is pinned because
-// a Finder-launched app starts at "/", where both CLIs walk up hunting for git roots.
+// Both CLIs get the same hardening. Returns nil on spawn failure or non-zero exit; callers map
+// that to their own error. USER is pinned because the Claude CLI resolves the plan from it —
+// without it /usage exits 0 with no percentages. The cwd is pinned because a Finder launch is "/".
 func runCLI(_ executable: URL, _ arguments: [String], timeout: TimeInterval = 20) -> Data? {
     let process = Process(), output = Pipe()
     process.executableURL = executable
@@ -78,4 +76,26 @@ func durationLabel(_ minutes: Int?) -> String {
     if minutes >= 1_440 { return "\(minutes / 1_440)d \((minutes % 1_440) / 60)h" }
     if minutes % 60 == 0 { return "\(minutes / 60)h" }
     return minutes < 60 ? "\(minutes)m" : "\(minutes / 60)h \(minutes % 60)m"
+}
+
+enum RefreshInterval: Int, CaseIterable, Identifiable {
+    case fifteenMinutes = 900, hour = 3600, fiveHours = 18_000, day = 86_400
+
+    var id: Int { rawValue }
+    var menuLabel: String {
+        switch self {
+        case .fifteenMinutes: "15 Minutes"
+        case .hour: "1 Hour"
+        case .fiveHours: "5 Hours"
+        case .day: "1 Day"
+        }
+    }
+}
+
+// Absolute, not relative: "4:29 PM" survives a menu left open, "in 3 hours" does not.
+func resetText(_ date: Date?) -> String {
+    guard let date else { return "reset unknown" }
+    let formatter = DateFormatter()
+    formatter.setLocalizedDateFormatFromTemplate(Calendar.current.isDateInToday(date) ? "jmm" : "EEEjmm")
+    return formatter.string(from: date)
 }

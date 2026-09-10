@@ -20,7 +20,7 @@ struct CodexAppServerClient {
         try await Task.detached { try fetchSynchronously(executable: executable) }.value
     }
 
-    // Costs a real turn — that is the point, it is what starts the rate-limit window.
+    // Costs a real turn — that is the point: it starts the rate-limit window.
     func sayHello(_ prompt: String) async throws {
         guard let executable else { throw CodexUsageError.notFound }
         try await Task.detached {

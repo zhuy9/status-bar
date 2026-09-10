@@ -1,44 +1,39 @@
 import SwiftUI
 import AppKit
 
-private enum MenuBarIcon {
-    static let image: NSImage = {
-        let image = NSImage(size: NSSize(width: 18, height: 18))
-        image.lockFocus()
-        NSColor.labelColor.setStroke()
-        NSColor.labelColor.setFill()
-        for (y, fillWidth) in [(CGFloat(3), CGFloat(4)), (CGFloat(8), CGFloat(7)), (CGFloat(13), CGFloat(7))] {
-            NSBezierPath(roundedRect: NSRect(x: 2, y: y, width: 14, height: 2), xRadius: 1, yRadius: 1).stroke()
-            NSBezierPath(roundedRect: NSRect(x: 2, y: y + 0.5, width: fillWidth, height: 1), xRadius: 0.5, yRadius: 0.5).fill()
-        }
-        image.unlockFocus()
-        image.isTemplate = true
-        return image
-    }()
+@main struct AIUsageMenuApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
+
+    // A stub: App requires a scene, and the real settings window is opened from the status menu.
+    var body: some Scene {
+        Settings { EmptyView() }
+    }
 }
 
-@main struct AIUsageMenuApp: App {
-    @StateObject private var store = UsageStore()
+@MainActor final class AppDelegate: NSObject, NSApplicationDelegate {
+    private var statusBar: StatusBarController?
 
-    var body: some Scene {
-        MenuBarExtra {
-            MenuContentView(store: store)
-        } label: {
-            Image(nsImage: MenuBarIcon.image)
-        }
-        .menuBarExtraStyle(.window)
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        statusBar = StatusBarController()
+    }
+}
 
-        Settings {
-            Form {
-                Toggle("Show Claude", isOn: Binding(get: { store.claudeEnabled }, set: store.setClaudeEnabled))
-                Toggle("Show Codex", isOn: Binding(get: { store.codexEnabled }, set: store.setCodexEnabled))
-                TextField("Greeting", text: $store.greeting, prompt: Text(UsageStore.defaultGreeting))
-                Text("Sent by the Hello buttons to start a rate-limit window. Leave blank for “\(UsageStore.defaultGreeting)”.")
-                    .font(.caption).foregroundStyle(.secondary)
+struct SettingsView: View {
+    @ObservedObject var store: UsageStore
+
+    var body: some View {
+        Form {
+            Toggle("Show Claude", isOn: Binding(get: { store.claudeEnabled }, set: store.setClaudeEnabled))
+            Toggle("Show Codex", isOn: Binding(get: { store.codexEnabled }, set: store.setCodexEnabled))
+            Picker("Refresh every", selection: $store.refreshInterval) {
+                ForEach(RefreshInterval.allCases) { Text($0.menuLabel).tag($0) }
             }
-            .toggleStyle(.switch)
-            .padding()
-            .frame(width: 260)
+            TextField("Greeting", text: $store.greeting, prompt: Text(UsageStore.defaultGreeting))
+            Text("Sent by Send a Greeting to start a rate-limit window. Leave blank for “\(UsageStore.defaultGreeting)”.")
+                .font(.caption).foregroundStyle(.secondary)
         }
+        .toggleStyle(.switch)
+        .frame(width: 280)
+        .padding(20)
     }
 }

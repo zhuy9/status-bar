@@ -26,11 +26,13 @@ git clone <your-fork-url> && cd status-bar
 codex login
 ```
 
-Then open `AIUsageMenu.xcodeproj` in Xcode and press **Run**. Click the chart icon in the menu bar.
+Then open `AIUsageMenu.xcodeproj` in Xcode and press **Run**. Click the chart icon in the menu bar. The built app is `Token Usage.app`; the Xcode target and the Swift module are still named `AIUsageMenu`.
 
-The app refreshes on launch, once an hour, and whenever you choose **Refresh**. Each row shows percent used and its reset time. If a provider is unavailable, its section shows a short message and keeps the last successful reading.
+The app refreshes on launch, on the interval set in Settings (15m, 1h, 5h, or 1d — default 1d), and whenever you choose **Refresh Now** (⌘R). Each row shows a bar, percent used, and the reset time. If a provider is unavailable, its rows stay put with the last successful reading and a line saying what went wrong.
 
-It also refreshes on `NSWorkspace.didWakeNotification`, because the hourly timer is a sleep loop rather than a wall clock and does not run through system sleep — without that, waking the Mac would leave hour-old numbers on screen until the next tick. The "Updated N ago" line under each provider is the tell if a reading is stale.
+It also refreshes on `NSWorkspace.didWakeNotification`, because the timer is a sleep loop rather than a wall clock and does not run through system sleep — without that, waking the Mac would leave stale numbers on screen until the next tick. The "Updated N ago" line under each provider is the tell if a reading is stale.
+
+The click target is a menu, not a popover, because the HIG asks for one: *"Display a menu — not a popover — when people click your menu bar extra."* The usage rows are `NSHostingView`s inside that `NSMenu`, because a plain menu item is a string — it cannot draw a bar, and an item that does nothing is disabled and therefore gray.
 
 ## Claude setup
 
@@ -42,7 +44,7 @@ adds nothing to the usage it reports.
 
 Two details worth knowing:
 
-- The spawn passes `--settings '{"disableAllHooks":true}'`, so hourly polling does not fire your
+- The spawn passes `--settings '{"disableAllHooks":true}'`, so interval polling does not fire your
   `SessionStart` hooks on a timer.
 - `USER` and `HOME` are set explicitly on the child. Without `USER` the CLI still exits 0 but
   prints session cost with no plan percentages at all — a silent empty reading.
@@ -76,7 +78,7 @@ You do not need to launch from Xcode every time.
 2. **Product > Build**.
 3. In the project navigator, open **Products**, right-click `AIUsageMenu.app`, choose **Show in Finder**.
 4. Copy `AIUsageMenu.app` to `/Applications`.
-5. Launch it. It appears in the menu bar as a chart icon — there is no Dock icon (`LSUIElement`).
+5. Launch it. It appears in the menu bar as a chart icon — there is no Dock icon (`LSUIElement`). Its app icon, used by Control Center's menu bar list, is built from `docs/token-usage-logo.png`.
 
 To launch it from Shortcuts, create a shortcut with the **Open App** action and choose `AIUsageMenu`.
 
